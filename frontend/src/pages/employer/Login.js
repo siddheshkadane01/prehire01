@@ -33,8 +33,11 @@ const EmployerLogin = () => {
       if (user.role === 'recruiter') {
         // Force a page reload to ensure proper authentication state
         window.location.href = '/recruiter';
+      } else if (user.role === 'tenant') {
+        // Redirect tenants to their dashboard
+        window.location.href = '/tenant/dashboard';
       } else {
-        setError('Access denied. Employer login only.');
+        setError('Access denied. Employer/Tenant login only.');
       }
     } else {
       setError(result.message);
@@ -57,7 +60,7 @@ const EmployerLogin = () => {
         marginTop: isMobile ? 70 : 80
       }}>
         <div style={styles.content}>
-          <h1 style={styles.title}>Welcome Back Employer!</h1>
+          <h1 style={styles.title}>Welcome Back!</h1>
           <p style={styles.subtitle}>Find your next perfect hire today!</p>
 
           

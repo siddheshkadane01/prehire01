@@ -37,6 +37,9 @@ import AddProfiles from './pages/AddProfiles';
 import ATSScoreUpload from './pages/ATSScoreUpload';
 import ATSScoreResults from './pages/ATSScoreResults';
 import CandidateATSScore from './pages/CandidateATSScore';
+import AdminLogin from './pages/admin/AdminLogin';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import TenantDashboard from './pages/tenant/TenantDashboard';
 
 function ProtectedRoute({ children, role }) {
   const { user, loading } = useAuth();
@@ -80,6 +83,36 @@ function App() {
             <Route path="/employer-signup" element={<EmployerSignup />} />
             <Route path="/employer/complete" element={<EmployerComplete />} />
             <Route path="/employer/password-signup" element={<EmployerPasswordSignup />} />
+            
+            {/* Admin Routes */}
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route 
+              path="/admin/dashboard" 
+              element={
+                <ProtectedRoute role="admin">
+                  <AdminDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* Tenant Routes */}
+            <Route 
+              path="/tenant" 
+              element={
+                <ProtectedRoute role="tenant">
+                  <TenantDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/tenant/dashboard" 
+              element={
+                <ProtectedRoute role="tenant">
+                  <TenantDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            
             <Route 
               path="/job-posting" 
               element={

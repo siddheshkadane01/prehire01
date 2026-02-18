@@ -76,10 +76,17 @@ const Navbar = () => {
               </Link>
               <Link
                 to="/employer/login"
-                style={{ ...styles.dropdownItem, borderBottom: 'none' }}
+                style={styles.dropdownItem}
                 onClick={() => setShowLoginDropdown(false)}
               >
                 Employer Login
+              </Link>
+              <Link
+                to="/admin/login"
+                style={{ ...styles.dropdownItem, borderBottom: 'none' }}
+                onClick={() => setShowLoginDropdown(false)}
+              >
+                Admin Login
               </Link>
             </div>
           )}
@@ -124,6 +131,13 @@ const Navbar = () => {
             onClick={closeMobileMenu}
           >
             Employer Login
+          </Link>
+          <Link
+            to="/admin/login"
+            style={styles.mobileNavLink}
+            onClick={closeMobileMenu}
+          >
+            Admin Login
           </Link>
         </div>
       )}

@@ -13,6 +13,8 @@ const linkedinRoutes = require('./routes/linkedin');
 const socialAuthRoutes = require('./routes/social-auth');
 const jobRoutes = require('./routes/jobs');
 const notificationRoutes = require('./routes/notifications');
+const adminRoutes = require('./routes/admin');
+const tenantRoutes = require('./routes/tenant');
 const errorHandler = require('./middleware/errorHandler');
 const rateLimiter = require('./middleware/rateLimiter');
 
@@ -49,6 +51,8 @@ app.use('/api/recruiter', recruiterRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/tenant', tenantRoutes);
 
 // Error handling middleware (must be last)
 app.use(errorHandler);

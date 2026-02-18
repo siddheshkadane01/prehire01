@@ -6,6 +6,11 @@ const jobSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
+  companyId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Company',
+    required: true
+  },
   title: {
     type: String,
     required: true,
@@ -77,6 +82,7 @@ const jobSchema = new mongoose.Schema({
 
 // Indexes for performance
 jobSchema.index({ recruiterId: 1, status: 1 });
+jobSchema.index({ companyId: 1, status: 1 });
 jobSchema.index({ status: 1, createdAt: -1 });
 jobSchema.index({ location: 1, workplaceType: 1 });
 jobSchema.index({ 'requirements.skills': 1 });

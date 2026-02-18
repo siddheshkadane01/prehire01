@@ -42,8 +42,18 @@ router.post(
         return res.status(403).json({ success: false, message: 'Access denied' });
       }
 
+      // Get recruiter's company
+      const recruiter = await User.findById(req.user.userId);
+      if (!recruiter || !recruiter.companyId) {
+        return res.status(400).json({
+          success: false,
+          message: 'Recruiter must be associated with a company'
+        });
+      }
+
       const jobData = {
         recruiterId: req.user.userId,
+        companyId: recruiter.companyId,
         title: req.body.title,
         description: req.body.description,
         location: req.body.location,
@@ -71,7 +81,7 @@ router.post(
   }
 );
 
-// Get all jobs (for recruiters - their jobs, for candidates - all active jobs)
+// Get all jobs (for recruiters - their company jobs, for candidates - all active jobs)
 router.get('/', auth, async (req, res) => {
   try {
     const { page = 1, limit = 20, status, location, workplaceType } = req.query;
@@ -80,7 +90,21 @@ router.get('/', auth, async (req, res) => {
     let filter = {};
 
     if (req.user.role === 'recruiter') {
-      filter.recruiterId = req.user.userId;
+      // Get recruiter's company and show only their company's jobs
+      const recruiter = await User.findById(req.user.userId);
+      if (recruiter && recruiter.companyId) {
+        filter.companyId = recruiter.companyId;
+      } else {
+        filter.recruiterId = req.user.userId;
+      }
+      if (status) filter.status = status;
+    } else if (req.user.role === 'tenant') {
+      // Tenant sees all jobs from their company
+      const Company = require('../models/Company');
+      const company = await Company.findOne({ tenantId: req.user.userId });
+      if (company) {
+        filter.companyId = company._id;
+      }
       if (status) filter.status = status;
     } else {
       // Candidates see only active jobs

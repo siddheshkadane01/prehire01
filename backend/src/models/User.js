@@ -5,7 +5,11 @@ const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String },
-  role: { type: String, enum: ['candidate', 'recruiter'], required: true },
+  role: { type: String, enum: ['candidate', 'recruiter', 'tenant', 'admin'], required: true },
+  // Multi-tenant fields
+  companyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Company' },
+  tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // For recruiters - links to their tenant
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Who created this user
   // Social login fields
   googleId: String,
   facebookId: String,
@@ -61,6 +65,9 @@ const userSchema = new mongoose.Schema({
 // Indexes for performance
 userSchema.index({ email: 1 });
 userSchema.index({ role: 1 });
+userSchema.index({ companyId: 1 });
+userSchema.index({ tenantId: 1 });
+userSchema.index({ createdBy: 1 });
 userSchema.index({ 'skills': 1 });
 userSchema.index({ location: 1 });
 userSchema.index({ experienceYears: 1 });

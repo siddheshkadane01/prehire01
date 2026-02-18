@@ -22,7 +22,10 @@ const serializeUser = (user) => ({
   experienceYears: user.experienceYears || 0,
   walletBalance: user.walletBalance || 0,
   paymentCards: user.paymentCards || [],
-  primaryCardId: user.primaryCardId || null
+  primaryCardId: user.primaryCardId || null,
+  companyId: user.companyId || null,
+  tenantId: user.tenantId || null,
+  companyName: user.companyName || ''
 });
 
 // Configure Google Strategy
@@ -64,7 +67,7 @@ router.post('/register', [
   body('name').notEmpty().withMessage('Name is required'),
   body('email').isEmail().withMessage('Valid email is required'),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
-  body('role').isIn(['candidate', 'recruiter']).withMessage('Role must be candidate or recruiter')
+  body('role').isIn(['candidate', 'recruiter', 'tenant', 'admin']).withMessage('Invalid role')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
