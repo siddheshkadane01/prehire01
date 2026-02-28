@@ -223,4 +223,53 @@ router.delete('/resume', auth, async (req, res) => {
   }
 });
 
+// Get candidate applications
+router.get('/applications', auth, async (req, res) => {
+  try {
+    const Job = require('../models/Job');
+    
+    // Find all jobs where this candidate has applied
+    const jobs = await Job.find({
+      'applications.candidateId': req.user.userId
+    })
+    .populate('companyId', 'name logo')
+    .select('title location workplaceType applications companyId createdAt')
+    .sort({ createdAt: -1 });
+    
+    // Extract only this candidate's application from each job
+    const applications = jobs.map(job => {
+      const application = job.applications.find(
+        app => app.candidateId.toString() === req.user.userId
+      );
+      
+      return {
+        _id: application._id,
+        jobId: {
+          _id: job._id,
+          title: job.title,
+          location: job.location,
+          workplaceType: job.workplaceType,
+          companyId: job.companyId
+        },
+        status: application.status,
+        appliedAt: application.appliedAt,
+        matchScore: application.matchScore,
+        interviewHistory: application.interviewHistory || []
+      };
+    });
+    
+    res.json({
+      success: true,
+      applications
+    });
+  } catch (error) {
+    console.error('Failed to fetch applications:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to fetch applications', 
+      error: error.message 
+    });
+  }
+});
+
 module.exports = router;

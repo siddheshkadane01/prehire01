@@ -30,7 +30,16 @@ const CandidateDashboardNew = () => {
     experienceYears: 0,
     walletBalance: 0
   });
+  const [applications, setApplications] = useState([]);
+  const [jobStats, setJobStats] = useState({
+    total: 0,
+    completed: 0,
+    pending: 0,
+    interviewed: 0
+  });
   const [loading, setLoading] = useState(true);
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [scheduledDates, setScheduledDates] = useState(new Set());
 
   useEffect(() => {
     const handleResize = () => {
@@ -46,6 +55,7 @@ const CandidateDashboardNew = () => {
 
   useEffect(() => {
     fetchProfile();
+    fetchApplications();
   }, []);
 
   // Refresh profile when user context changes (e.g., after balance update)
@@ -107,37 +117,167 @@ const CandidateDashboardNew = () => {
     }
   };
 
-  const CalendarCell = ({ day, active }) => (
-    <div style={{
-      width: 36,
-      height: 36,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderRadius: 10,
-      background: active ? '#E8F0FF' : 'transparent',
-      color: '#111827',
-      fontWeight: active ? 600 : 500,
-      fontSize: 14
-    }}>
-      {day}
-    </div>
-  );
+  const fetchApplications = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_ENDPOINTS.BASE_URL}/api/candidate/applications`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.success) {
+        const apps = response.data.applications || [];
+        setApplications(apps);
+        
+        // Calculate stats
+        const stats = {
+          total: apps.length,
+          completed: apps.filter(a => ['hired', 'offer_accepted'].includes(a.status)).length,
+          pending: apps.filter(a => ['applied', 'screening', 'unscreened'].includes(a.status)).length,
+          interviewed: apps.filter(a => ['interview_scheduled', 'interview_completed'].includes(a.status)).length
+        };
+        setJobStats(stats);
 
-  const companiesShortlisted = [
-    { name: 'Amazon', role: 'UX Designer' },
-    { name: 'IBM', role: 'Web Developer' },
-    { name: 'Infosys', role: 'Software Developer' },
-    { name: 'Deloitte', role: 'Web Developer' },
-    { name: 'Microsoft', role: 'Software Developer' },
-    { name: 'Amdocs', role: 'Web Developer' }
-  ];
+        // Extract scheduled interview dates
+        const dates = new Set();
+        apps.forEach(app => {
+          if (app.interviewDate) {
+            const date = new Date(app.interviewDate);
+            dates.add(date.getDate());
+          }
+        });
+        setScheduledDates(dates);
+      }
+    } catch (error) {
+      console.error('Failed to fetch applications:', error);
+    }
+  };
 
-  const hiringManagers = [
-    { name: 'Himanshu S.', company: 'IMB' },
-    { name: 'Sahil M.', company: 'Amdocs' },
-    { name: 'Sanya Shah', company: 'Infosys' }
-  ];
+  // Calendar functions
+  const getDaysInMonth = (date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    return new Date(year, month + 1, 0).getDate();
+  };
+
+  const getFirstDayOfMonth = (date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    return new Date(year, month, 1).getDay();
+  };
+
+  const generateCalendarDays = () => {
+    const daysInMonth = getDaysInMonth(currentDate);
+    const firstDay = getFirstDayOfMonth(currentDate);
+    const days = [];
+
+    // Add empty cells for days before the first day of the month
+    for (let i = 0; i < firstDay; i++) {
+      days.push(null);
+    }
+
+    // Add the days of the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      days.push(day);
+    }
+
+    return days;
+  };
+
+  const navigateMonth = (direction) => {
+    setCurrentDate(prevDate => {
+      const newDate = new Date(prevDate);
+      newDate.setMonth(newDate.getMonth() + direction);
+      return newDate;
+    });
+  };
+
+  const isToday = (day) => {
+    if (!day) return false;
+    const today = new Date();
+    return day === today.getDate() &&
+           currentDate.getMonth() === today.getMonth() &&
+           currentDate.getFullYear() === today.getFullYear();
+  };
+
+  const isScheduled = (day) => {
+    return scheduledDates.has(day);
+  };
+
+  const formatMonthYear = (date) => {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return `${months[date.getMonth()]} ${date.getFullYear()}`;
+  };
+
+  const CalendarCell = ({ day }) => {
+    if (!day) {
+      return <div style={{ width: 36, height: 36 }} />;
+    }
+
+    const today = isToday(day);
+    const scheduled = isScheduled(day);
+
+    return (
+      <div style={{
+        width: 36,
+        height: 36,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: 10,
+        background: today ? '#6366F1' : scheduled ? '#E8F0FF' : 'transparent',
+        color: today ? '#FFFFFF' : '#111827',
+        fontWeight: today || scheduled ? 600 : 500,
+        fontSize: 14,
+        cursor: 'pointer',
+        transition: 'all 0.2s',
+        position: 'relative'
+      }}
+      onMouseEnter={(e) => {
+        if (!today) e.currentTarget.style.background = '#F3F4F6';
+      }}
+      onMouseLeave={(e) => {
+        if (!today) e.currentTarget.style.background = scheduled ? '#E8F0FF' : 'transparent';
+      }}
+      >
+        {day}
+        {scheduled && !today && (
+          <div style={{
+            position: 'absolute',
+            bottom: 4,
+            width: 4,
+            height: 4,
+            borderRadius: '50%',
+            background: '#6366F1'
+          }} />
+        )}
+      </div>
+    );
+  };
+
+  // Get shortlisted applications
+  const shortlistedApps = applications.filter(app => app.status === 'shortlisted');
+  
+  // Get unique companies from applications
+  const companiesApplied = applications.map(app => ({
+    name: app.jobId?.companyId?.name || 'Company',
+    role: app.jobId?.title || 'Position',
+    jobId: app.jobId?._id,
+    status: app.status
+  }));
+
+  // Extract hiring managers from applications
+  const hiringManagers = applications
+    .filter(app => app.jobId?.hiringManager?.name)
+    .map(app => ({
+      name: app.jobId.hiringManager.name,
+      email: app.jobId.hiringManager.email,
+      company: app.jobId?.companyId?.name || 'Company',
+      jobId: app.jobId._id
+    }))
+    .filter((manager, index, self) => 
+      index === self.findIndex(m => m.email === manager.email)
+    )
+    .slice(0, 5);
 
   if (loading) return <div style={styles.loading}>Loading...</div>;
 
@@ -276,10 +416,18 @@ const CandidateDashboardNew = () => {
             <div>
               <div style={styles.welcomeTitle}>Welcome back, {firstName}!</div>
               <div style={styles.welcomeSub}>Ready to get hired smarter?</div>
+              <button
+                style={styles.browseJobsBtn}
+                onClick={() => navigate('/candidate/jobs')}
+                onMouseEnter={(e) => e.target.style.background = '#5558E3'}
+                onMouseLeave={(e) => e.target.style.background = '#6366F1'}
+              >
+                Browse Jobs
+              </button>
             </div>
             <div style={styles.chip}>
-              <span style={styles.chipNum}>20</span>
-              <span>Companies Shortlisted</span>
+              <span style={styles.chipNum}>{shortlistedApps.length}</span>
+              <span>Applications Shortlisted</span>
             </div>
           </div>
 
@@ -290,14 +438,28 @@ const CandidateDashboardNew = () => {
               <a href="#" style={styles.linkSm}>See all</a>
             </div>
             <div style={styles.calendarHeaderRow}>
-              <button style={styles.calendarNavBtn}>‹</button>
-              <div style={styles.calendarHeader}>Aug 2025</div>
-              <button style={styles.calendarNavBtn}>›</button>
+              <button 
+                style={styles.calendarNavBtn}
+                onClick={() => navigateMonth(-1)}
+                onMouseEnter={(e) => e.target.style.background = '#F3F4F6'}
+                onMouseLeave={(e) => e.target.style.background = 'transparent'}
+              >
+                ‹
+              </button>
+              <div style={styles.calendarHeader}>{formatMonthYear(currentDate)}</div>
+              <button 
+                style={styles.calendarNavBtn}
+                onClick={() => navigateMonth(1)}
+                onMouseEnter={(e) => e.target.style.background = '#F3F4F6'}
+                onMouseLeave={(e) => e.target.style.background = 'transparent'}
+              >
+                ›
+              </button>
             </div>
             <div style={styles.calendarDaysRow}>S M T W T F S</div>
             <div style={styles.calendarGrid}>
-              {[2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30].map((d) => (
-                <CalendarCell key={d} day={d} active={[2, 6, 11, 13, 17, 20, 24, 27].includes(d)} />
+              {generateCalendarDays().map((day, index) => (
+                <CalendarCell key={index} day={day} />
               ))}
             </div>
           </div>
@@ -308,22 +470,22 @@ const CandidateDashboardNew = () => {
             <div style={styles.summaryItem}>
               <div style={styles.summaryIcon}>✔️</div>
               <div>
-                <div style={styles.summaryNum}>39</div>
+                <div style={styles.summaryNum}>{jobStats.completed}</div>
                 <div style={styles.summaryLabel}>Completed</div>
               </div>
             </div>
             <div style={styles.summaryItem}>
               <div style={styles.summaryIcon}>🕒</div>
               <div>
-                <div style={styles.summaryNum}>16</div>
+                <div style={styles.summaryNum}>{jobStats.pending}</div>
                 <div style={styles.summaryLabel}>Pending</div>
               </div>
             </div>
             <div style={styles.summaryItem}>
               <div style={styles.summaryIcon}>⭐</div>
               <div>
-                <div style={styles.summaryNum}>3</div>
-                <div style={styles.summaryLabel}>Pending Feedback</div>
+                <div style={styles.summaryNum}>{jobStats.interviewed}</div>
+                <div style={styles.summaryLabel}>Interviewed</div>
               </div>
             </div>
           </div>
@@ -334,22 +496,36 @@ const CandidateDashboardNew = () => {
           gridTemplateColumns: isMobile ? '1fr' : '1.2fr 1fr',
           gap: isMobile ? 12 : 16
         }}>
-          {/* Companies Shortlisted Card */}
+          {/* Recent Applications Card */}
           <div style={styles.companiesCard}>
             <div style={styles.cardHeaderRow}>
-              <div style={styles.cardTitle}>Companies Shortlisted</div>
-              <a href="#" style={styles.linkSm}>See all</a>
+              <div style={styles.cardTitle}>Recent Applications</div>
+              <a href="#" style={styles.linkSm}>{applications.length} Total</a>
             </div>
             <div>
-              {companiesShortlisted.map((company, i) => (
-                <div key={i} style={styles.companyRow}>
-                  <div style={{ display: 'flex', gap: 16 }}>
-                    <span>{i + 1}. {company.name}</span>
-                    <span style={{ color: '#6B7280' }}>- {company.role}</span>
-                  </div>
-                  <a href="#" style={styles.linkXS}>View profile</a>
+              {applications.length === 0 ? (
+                <div style={{ padding: '16px', color: '#6B7280', textAlign: 'center' }}>
+                  No applications yet. Start applying to jobs!
                 </div>
-              ))}
+              ) : (
+                applications.slice(0, 6).map((app, i) => (
+                  <div key={i} style={styles.companyRow}>
+                    <div style={{ display: 'flex', gap: 16 }}>
+                      <span>{i + 1}. {app.jobId?.companyId?.name || 'Company'}</span>
+                      <span style={{ color: '#6B7280' }}>- {app.jobId?.title || 'Position'}</span>
+                    </div>
+                    <span style={{ 
+                      fontSize: 12, 
+                      padding: '2px 8px', 
+                      borderRadius: 4,
+                      background: app.status === 'shortlisted' ? '#D1FAE5' : '#F3F4F6',
+                      color: app.status === 'shortlisted' ? '#065F46' : '#6B7280'
+                    }}>
+                      {app.status}
+                    </span>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
@@ -357,16 +533,57 @@ const CandidateDashboardNew = () => {
           <div style={styles.hiringManagersCard}>
             <div style={styles.cardHeaderRow}>
               <div style={styles.cardTitle}>Hiring Managers</div>
-              <button style={styles.addMoreBtn}>Add More +</button>
+              <button 
+                style={{ 
+                  fontSize: 14, 
+                  color: '#6366F1', 
+                  fontWeight: 600,
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: '4px 12px',
+                  borderRadius: 6,
+                  transition: 'background 0.2s'
+                }}
+                onClick={() => {/* TODO: Add more managers modal */}}
+                onMouseEnter={(e) => e.target.style.background = '#EEF2FF'}
+                onMouseLeave={(e) => e.target.style.background = 'none'}
+              >
+                Add More +
+              </button>
             </div>
             <div>
-              {hiringManagers.map((manager, i) => (
-                <div key={i} style={styles.managerRow}>
-                  <span>{i + 1}. {manager.name}</span>
-                  <span style={{ color: '#6B7280' }}>- {manager.company}</span>
-                  <a href="#" style={styles.linkXS}>Contact</a>
+              {hiringManagers.length === 0 ? (
+                <div style={{ padding: '20px', textAlign: 'center', color: '#6B7280' }}>
+                  No hiring managers yet. Apply to jobs to see hiring managers.
                 </div>
-              ))}
+              ) : (
+                hiringManagers.map((manager, index) => (
+                  <div key={manager.email} style={styles.managerRow}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ color: '#6B7280', minWidth: 20 }}>{index + 1}.</span>
+                      <span>{manager.name}</span>
+                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <span style={{ color: '#6B7280', fontSize: 14 }}>{manager.company}</span>
+                      <button
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: '#6366F1',
+                          fontSize: 14,
+                          fontWeight: 500,
+                          cursor: 'pointer',
+                          textDecoration: 'underline'
+                        }}
+                        onClick={() => window.location.href = `mailto:${manager.email}`}
+                      >
+                        Contact
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
@@ -632,6 +849,19 @@ const styles = {
     color: '#6B7280',
     fontWeight: 500
   },
+  browseJobsBtn: {
+    marginTop: 16,
+    padding: '10px 20px',
+    background: '#6366F1',
+    color: '#FFFFFF',
+    border: 'none',
+    borderRadius: 8,
+    fontSize: 14,
+    fontWeight: 600,
+    cursor: 'pointer',
+    transition: 'background 0.2s',
+    boxShadow: '0 2px 4px rgba(99, 102, 241, 0.2)'
+  },
   chip: {
     marginTop: 20,
     alignSelf: 'flex-start',
@@ -687,12 +917,14 @@ const styles = {
     marginBottom: 10
   },
   calendarNavBtn: {
-    background: 'none',
+    background: 'transparent',
     border: 'none',
     cursor: 'pointer',
     fontSize: 18,
     color: '#6B7280',
-    padding: '4px 8px'
+    padding: '4px 8px',
+    borderRadius: 6,
+    transition: 'background 0.2s'
   },
   calendarHeader: {
     color: '#374151',

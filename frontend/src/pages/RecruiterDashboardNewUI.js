@@ -250,6 +250,62 @@ const RecruiterDashboardNewUI = () => {
         padding: isMobile ? 10 : 16,
         marginTop: isMobile ? 60 : 70
       }}>
+        {/* Quick Actions Bar */}
+        <div style={{
+          marginBottom: 16,
+          display: 'flex',
+          gap: 12,
+          flexWrap: 'wrap'
+        }}>
+          <button
+            onClick={() => navigate('/recruiter/jobs/new-enhanced')}
+            style={{
+              background: 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 8,
+              padding: '12px 24px',
+              cursor: 'pointer',
+              fontWeight: 600,
+              fontSize: 15,
+              boxShadow: '0 2px 4px rgba(99, 102, 241, 0.3)',
+              transition: 'transform 0.2s, boxShadow 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.transform = 'translateY(-2px)';
+              e.target.style.boxShadow = '0 4px 8px rgba(99, 102, 241, 0.4)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.transform = 'translateY(0)';
+              e.target.style.boxShadow = '0 2px 4px rgba(99, 102, 241, 0.3)';
+            }}
+          >
+            ✨ Post New Job (Enhanced)
+          </button>
+          <button
+            onClick={() => navigate('/job-posting')}
+            style={{
+              background: '#fff',
+              color: '#6366F1',
+              border: '2px solid #6366F1',
+              borderRadius: 8,
+              padding: '12px 24px',
+              cursor: 'pointer',
+              fontWeight: 600,
+              fontSize: 15,
+              transition: 'background 0.2s, color 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.background = '#EEF2FF';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.background = '#fff';
+            }}
+          >
+            📝 Quick Post Job
+          </button>
+        </div>
+
         <div style={{
           ...styles.gridTop,
           gridTemplateColumns: isMobile

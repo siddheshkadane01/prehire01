@@ -13,6 +13,8 @@ import EmployerSignup from './pages/EmployerSignup';
 import EmployerComplete from './pages/EmployerComplete';
 import EmployerPasswordSignup from './pages/EmployerPasswordSignup';
 import JobPosting from './pages/JobPosting';
+import JobPostingEnhanced from './pages/JobPostingEnhanced';
+import CandidateScreeningDashboard from './pages/CandidateScreeningDashboard';
 import ProfileUnlock from './pages/ProfileUnlock';
 import UnlockPrompt from './pages/UnlockPrompt';
 import PaymentSuccess from './pages/PaymentSuccess';
@@ -20,6 +22,7 @@ import LinkedInSuccess from './pages/LinkedInSuccess';
 import CandidateProfile from './pages/CandidateProfile';
 import CandidateDashboardNew from './pages/CandidateDashboardNew';
 import RecruiterDashboardNewUI from './pages/RecruiterDashboardNewUI';
+import JobListing from './pages/JobListing';
 import AddBalance from './pages/AddBalance';
 import AddNewCard from './pages/AddNewCard';
 import CandidateAddBalance from './pages/candidate/AddBalance';
@@ -122,6 +125,22 @@ function App() {
               } 
             />
             <Route 
+              path="/recruiter/jobs/new-enhanced" 
+              element={
+                <ProtectedRoute role="recruiter">
+                  <JobPostingEnhanced />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/recruiter/jobs/:jobId/screening" 
+              element={
+                <ProtectedRoute role="recruiter">
+                  <CandidateScreeningDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
               path="/unlock-prompt" 
               element={
                 <ProtectedRoute role="recruiter">
@@ -168,6 +187,14 @@ function App() {
               element={
                 <ProtectedRoute role="candidate">
                   <CandidateProfile />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/candidate/jobs" 
+              element={
+                <ProtectedRoute role="candidate">
+                  <JobListing />
                 </ProtectedRoute>
               } 
             />
