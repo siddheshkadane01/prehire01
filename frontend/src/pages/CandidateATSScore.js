@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../utils/AuthContext';
 import { FiBell, FiSearch } from 'react-icons/fi';
 import API_ENDPOINTS from '../config/api';
 
 const CandidateATSScore = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [jobDescription, setJobDescription] = useState('');
   const [atsResult, setAtsResult] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -30,7 +32,22 @@ const CandidateATSScore = () => {
           }
         }
       );
-      setAtsResult(res.data);
+      
+      // Navigate to the beautiful results page with the data
+      navigate('/ats-score-results', {
+        state: { 
+          atsScore: res.data, 
+          jobDescription, 
+          parsedData: {
+            name: user?.name,
+            email: user?.email,
+            phone: user?.phone,
+            skills: user?.skills || [],
+            education: user?.education,
+            experienceYears: user?.experienceYears
+          } 
+        }
+      });
     } catch (error) {
       console.error('ATS score error:', error);
       alert('Failed to calculate ATS score. Please try again.');
@@ -111,59 +128,6 @@ const CandidateATSScore = () => {
             {loading ? 'Calculating...' : 'Calculate ATS Score'}
           </button>
         </form>
-
-        {atsResult && (
-          <section style={styles.resultsSection}>
-            <div style={styles.card}>
-              <h3 style={styles.cardTitle}>ATS Score</h3>
-              <p style={styles.cardSubtitle}>Based on your current profile and parsed resume</p>
-
-              <div style={styles.scoreCircleContainer}>
-                <div style={styles.scoreCircle}>
-                  <svg width="120" height="120" style={styles.circleSvg}>
-                    <circle
-                      cx="60"
-                      cy="60"
-                      r="54"
-                      fill="none"
-                      stroke="#E5E7EB"
-                      strokeWidth="8"
-                    />
-                    <circle
-                      cx="60"
-                      cy="60"
-                      r="54"
-                      fill="none"
-                      stroke={getScoreColor(overallScore)}
-                      strokeWidth="8"
-                      strokeDasharray={`${(overallScore / 100) * 339.29} 339.29`}
-                      strokeDashoffset="84.82"
-                      transform="rotate(-90 60 60)"
-                    />
-                  </svg>
-                  <div style={styles.scoreText}>
-                    <div style={styles.scoreNumber}>{overallScore}%</div>
-                  </div>
-                </div>
-              </div>
-
-              <div style={styles.breakdownGrid}>
-                <div style={styles.breakdownItem}>
-                  <div style={styles.breakdownLabel}>Skills Match</div>
-                  <div style={styles.breakdownValue}>{Math.round(breakdown.skillsScore || 0)}%</div>
-                </div>
-                <div style={styles.breakdownItem}>
-                  <div style={styles.breakdownLabel}>Content Match</div>
-                  <div style={styles.breakdownValue}>{Math.round(breakdown.keywordScore || 0)}%</div>
-                </div>
-                <div style={styles.breakdownItem}>
-                  <div style={styles.breakdownLabel}>Education Fit</div>
-                  <div style={styles.breakdownValue}>{Math.round(breakdown.educationScore || 0)}%</div>
-                </div>
-              </div>
-            </div>
-          </section>
-        )}
 
         <div style={styles.footer}>
           <a href="/candidate/edit-profile" style={styles.backLink}>Back to Profile</a>

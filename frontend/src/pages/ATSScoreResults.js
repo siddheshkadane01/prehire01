@@ -11,7 +11,6 @@ const ATSScoreResults = () => {
   const [atsScore, setAtsScore] = useState(location.state?.atsScore || null);
   const [parsedData, setParsedData] = useState(location.state?.parsedData || null);
   const [jobDescription, setJobDescription] = useState(location.state?.jobDescription || '');
-  const [unlocked, setUnlocked] = useState(false);
 
   useEffect(() => {
     if (!atsScore) {
@@ -42,10 +41,6 @@ const ATSScoreResults = () => {
       jobSkill.toLowerCase().includes(skill.toLowerCase())
     )
   );
-
-  const handleUnlock = () => {
-    setUnlocked(true);
-  };
 
   return (
     <div style={styles.container}>
@@ -100,32 +95,21 @@ const ATSScoreResults = () => {
             {/* Improvement Suggestions Card */}
             <div style={styles.card}>
               <h3 style={styles.cardTitle}>Improvement Suggestion</h3>
-              {!unlocked ? (
-                <>
-                  <div style={styles.blurredContent}>
-                    <p style={styles.blurredText}>Improvement suggestions are available in the full report...</p>
-                  </div>
-                  <button onClick={handleUnlock} style={styles.unlockButton}>
-                    Unlock Full Report
-                  </button>
-                </>
-              ) : (
-                <div style={styles.suggestionsContent}>
-                  <ul style={styles.suggestionsList}>
-                    {missingSkills.length > 0 && (
-                      <li>Add missing skills: {missingSkills.slice(0, 3).join(', ')}</li>
-                    )}
-                    {breakdown.experienceYears < 3 && (
-                      <li>Highlight relevant experience and achievements</li>
-                    )}
-                    {breakdown.educationScore < 70 && (
-                      <li>Emphasize educational qualifications and certifications</li>
-                    )}
-                    <li>Use keywords from the job description throughout your resume</li>
-                    <li>Quantify achievements with specific metrics and numbers</li>
-                  </ul>
-                </div>
-              )}
+              <div style={styles.suggestionsContent}>
+                <ul style={styles.suggestionsList}>
+                  {missingSkills.length > 0 && (
+                    <li>Add missing skills: {missingSkills.slice(0, 3).join(', ')}</li>
+                  )}
+                  {breakdown.experienceYears < 3 && (
+                    <li>Highlight relevant experience and achievements</li>
+                  )}
+                  {breakdown.educationScore < 70 && (
+                    <li>Emphasize educational qualifications and certifications</li>
+                  )}
+                  <li>Use keywords from the job description throughout your resume</li>
+                  <li>Quantify achievements with specific metrics and numbers</li>
+                </ul>
+              </div>
             </div>
           </div>
 
@@ -184,62 +168,44 @@ const ATSScoreResults = () => {
 
             {/* Resume Preview Card */}
             <div style={styles.card}>
-              {!unlocked ? (
-                <>
-                  <div style={styles.blurredContent}>
-                    <div style={styles.blurredResumePreview}>
-                      {parsedData?.name && (
-                        <div style={styles.blurredResumeHeader}>
-                          <div style={styles.blurredAvatar}></div>
-                          <div style={styles.blurredName}>{parsedData.name}</div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <button onClick={handleUnlock} style={styles.unlockButton}>
-                    Unlock Full Report
-                  </button>
-                </>
-              ) : (
-                <div style={styles.resumePreview}>
-                  <div style={styles.resumeHeader}>
-                    {parsedData?.name && (
-                      <>
-                        <div style={styles.resumeAvatar}>
-                          {parsedData.name.charAt(0)}
-                        </div>
-                        <div>
-                          <div style={styles.resumeName}>{parsedData.name}</div>
-                          {parsedData.email && <div style={styles.resumeEmail}>{parsedData.email}</div>}
-                          {parsedData.phone && <div style={styles.resumePhone}>{parsedData.phone}</div>}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                  {parsedData?.skills && parsedData.skills.length > 0 && (
-                    <div style={styles.resumeSection}>
-                      <h4 style={styles.resumeSectionTitle}>Skills</h4>
-                      <div style={styles.resumeSkills}>
-                        {parsedData.skills.map((skill, index) => (
-                          <span key={index} style={styles.resumeSkillTag}>{skill}</span>
-                        ))}
+              <div style={styles.resumePreview}>
+                <div style={styles.resumeHeader}>
+                  {parsedData?.name && (
+                    <>
+                      <div style={styles.resumeAvatar}>
+                        {parsedData.name.charAt(0)}
                       </div>
-                    </div>
-                  )}
-                  {parsedData?.education && (
-                    <div style={styles.resumeSection}>
-                      <h4 style={styles.resumeSectionTitle}>Education</h4>
-                      <p style={styles.resumeText}>{parsedData.education}</p>
-                    </div>
-                  )}
-                  {parsedData?.experienceYears !== undefined && (
-                    <div style={styles.resumeSection}>
-                      <h4 style={styles.resumeSectionTitle}>Experience</h4>
-                      <p style={styles.resumeText}>{parsedData.experienceYears} years</p>
-                    </div>
+                      <div>
+                        <div style={styles.resumeName}>{parsedData.name}</div>
+                        {parsedData.email && <div style={styles.resumeEmail}>{parsedData.email}</div>}
+                        {parsedData.phone && <div style={styles.resumePhone}>{parsedData.phone}</div>}
+                      </div>
+                    </>
                   )}
                 </div>
-              )}
+                {parsedData?.skills && parsedData.skills.length > 0 && (
+                  <div style={styles.resumeSection}>
+                    <h4 style={styles.resumeSectionTitle}>Skills</h4>
+                    <div style={styles.resumeSkills}>
+                      {parsedData.skills.map((skill, index) => (
+                        <span key={index} style={styles.resumeSkillTag}>{skill}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {parsedData?.education && (
+                  <div style={styles.resumeSection}>
+                    <h4 style={styles.resumeSectionTitle}>Education</h4>
+                    <p style={styles.resumeText}>{parsedData.education}</p>
+                  </div>
+                )}
+                {parsedData?.experienceYears !== undefined && (
+                  <div style={styles.resumeSection}>
+                    <h4 style={styles.resumeSectionTitle}>Experience</h4>
+                    <p style={styles.resumeText}>{parsedData.experienceYears} years</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
