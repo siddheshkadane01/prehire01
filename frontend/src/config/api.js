@@ -47,7 +47,8 @@ export const API_ENDPOINTS = {
     CANDIDATES: `${API_BASE_URL}/api/recruiter/candidates`,
     SEARCH: `${API_BASE_URL}/api/recruiter/search`,
     UNLOCK_PROFILE: (candidateId) => `${API_BASE_URL}/api/recruiter/unlock-profile/${candidateId}`,
-    WALLET_BALANCE: `${API_BASE_URL}/api/recruiter/wallet-balance`
+    WALLET_BALANCE: `${API_BASE_URL}/api/recruiter/wallet-balance`,
+    PANEL_MEMBERS: `${API_BASE_URL}/api/recruiter/panel-members`
   },
   
   // Jobs
