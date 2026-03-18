@@ -132,6 +132,62 @@ const RecruiterDashboardNewUI = () => {
     };
   }, [profileMenuOpen]);
 
+  // Calendar Logic
+  const [currentDate, setCurrentDate] = useState(new Date()); 
+  
+  // Dummy scheduled events to show functionality
+  const [scheduledEvents] = useState([
+    // Hardcoded Feb 2026 events based on attached image
+    new Date(2026, 1, 4).toDateString(),
+    new Date(2026, 1, 8).toDateString(),
+    new Date(2026, 1, 12).toDateString(),
+    new Date(2026, 1, 16).toDateString(),
+    new Date(2026, 1, 20).toDateString(),
+    new Date(2026, 1, 24).toDateString(),
+    new Date(2026, 1, 28).toDateString(),
+    // Keep some events active in the actual current month
+    new Date(new Date().getFullYear(), new Date().getMonth(), 3).toDateString(),
+    new Date(new Date().getFullYear(), new Date().getMonth(), 14).toDateString(),
+    new Date(new Date().getFullYear(), new Date().getMonth(), 21).toDateString(),
+    new Date(new Date().getFullYear(), new Date().getMonth(), 26).toDateString(),
+  ]);
+
+  const handlePrevMonth = () => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+  };
+
+  const handleNextMonth = () => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+  };
+
+  const getDaysInMonth = (date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const firstDay = new Date(year, month, 1).getDay(); // 0-6 (Sun-Sat)
+    
+    const days = [];
+    for (let i = 0; i < firstDay; i++) {
+      days.push(null);
+    }
+    for (let i = 1; i <= daysInMonth; i++) {
+      days.push(i);
+    }
+    return days;
+  };
+
+  const calendarDays = getDaysInMonth(currentDate);
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const currentMonthName = monthNames[currentDate.getMonth()];
+  const currentYear = currentDate.getFullYear();
+
+  // Highlight dates only if they match an event in scheduledEvents
+  const isDayActive = (month, year, day) => {
+    if (!day) return false;
+    const checkDate = new Date(year, month, day).toDateString();
+    return scheduledEvents.includes(checkDate);
+  };
+
   const handleLogout = () => {
     logout();
     navigate('/employer/login');
@@ -144,10 +200,11 @@ const RecruiterDashboardNewUI = () => {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      borderRadius: 10,
-      background: active ? '#E8F0FF' : 'transparent',
-      color: '#111827',
-      fontWeight: active ? 600 : 500
+      borderRadius: '50%',
+      background: active ? '#3B82F6' : (day ? '#F3F4F6' : 'transparent'),
+      color: active ? '#FFFFFF' : '#111827',
+      fontWeight: active ? 600 : 500,
+      visibility: day === null ? 'hidden' : 'visible'
     }}>
       {day}
     </div>
@@ -335,11 +392,31 @@ const RecruiterDashboardNewUI = () => {
               <div style={styles.cardTitle}>Upcoming Schedule</div>
               <a href="#" style={styles.linkSm}>See all</a>
             </div>
-            <div style={styles.calendarHeader}>Aug 2025</div>
-            <div style={styles.calendarDaysRow}>S M T W T F S</div>
+            <div style={{ ...styles.calendarHeader, display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '0.8rem', marginTop: '1rem', marginBottom: '1rem' }}>
+              <button 
+                onClick={handlePrevMonth} 
+                style={{ border: 'none', background: '#F3F4F6', borderRadius: '50%', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 16 }}
+              >
+                &lsaquo;
+              </button>
+              <span style={{ minWidth: '80px', textAlign: 'center' }}>{currentMonthName} {currentYear}</span>
+              <button 
+                onClick={handleNextMonth} 
+                style={{ border: 'none', background: '#F3F4F6', borderRadius: '50%', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 16 }}
+              >
+                &rsaquo;
+              </button>
+            </div>
+            <div style={{...styles.calendarDaysRow, display: 'grid', gridTemplateColumns: 'repeat(7, 36px)', gap: 8, textAlign: 'center'}}>
+              <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+            </div>
             <div style={styles.calendarGrid}>
-              {[5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30].map((d) => (
-                <CalendarCell key={d} day={d} active={[6, 13, 20, 24, 27].includes(d)} />
+              {calendarDays.map((d, index) => (
+                <CalendarCell 
+                  key={index} 
+                  day={d} 
+                  active={isDayActive(currentDate.getMonth(), currentDate.getFullYear(), d)} 
+                />
               ))}
             </div>
           </div>
@@ -372,85 +449,118 @@ const RecruiterDashboardNewUI = () => {
         <div style={{
           ...styles.gridBottom,
           gridTemplateColumns: isMobile ? '1fr' : '1.2fr 1fr',
-          gap: isMobile ? 12 : 16
+          gap: isMobile ? 12 : 16,
+          alignItems: 'flex-start'
         }}>
-          <div style={styles.shortlistedCard}>
-            <div style={styles.cardHeaderRow}>
-              <div style={styles.cardTitle}>Shortlisted Profiles</div>
-              <a
-                href="#"
-                style={styles.linkSm}
-                onClick={(e) => {
-                  e.preventDefault();
-                  navigate('/recruiter/add-profiles');
-                }}
-              >
-                See all
-              </a>
-            </div>
-            <div>
-              {shortlistLoading && (
-                <div style={styles.emptyState}>Loading shortlisted profiles...</div>
-              )}
-              {shortlistError && (
-                <div style={styles.errorText}>{shortlistError}</div>
-              )}
-              {!shortlistLoading && shortlistedProfiles.length === 0 && !shortlistError && (
-                <div style={styles.emptyState}>No profile shortlisted</div>
-              )}
-              {!shortlistLoading && shortlistedProfiles.map((p, i) => (
-                <div key={p.id || i} style={styles.shortRow}>
-                  <div style={{ display: 'flex', gap: 16 }}>
-                    <span>{i + 1}. {p.name}</span>
-                    <span style={{ color: '#6B7280' }}>{p.title || p.role}</span>
-                  </div>
-                  <a
-                    href="#"
-                    style={styles.linkXS}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      navigate('/recruiter/add-profiles');
-                    }}
-                  >
-                    View profile
-                  </a>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div style={styles.panelCard}>
-            <div style={styles.cardHeaderRow}>
-              <div style={styles.cardTitle}>Panel Members</div>
-              <button
-                style={styles.addMoreBtn}
-                onClick={() => navigate('/recruiter/add-panel-member')}
-              >
-                Add More +
-              </button>
-            </div>
-            <div>
-              {panelMembers.map((m, i) => (
-                <div key={i} style={styles.panelRow}>
-                  <span>{i + 1}. {m.name}</span>
-                  <span style={{ color: '#6B7280' }}>{m.role}</span>
-                  <a href="#" style={styles.linkXS}>Contact</a>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div style={{
-            ...styles.accountCard,
-            gridColumn: isMobile ? 'auto' : '1 / -1'
-          }}>
-            <div style={styles.cardTitle}>Account Information</div>
-            <div style={styles.accountRow}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 18 }}>💳</span>
-                <span>Balance : ₹ {(walletBalance !== undefined ? walletBalance : (user?.walletBalance || 0)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+          {/* Left Column */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 12 : 16 }}>
+            <div style={styles.shortlistedCard}>
+              <div style={styles.cardHeaderRow}>
+                <div style={styles.cardTitle}>Shortlisted Profiles</div>
+                <a
+                  href="#"
+                  style={styles.linkSm}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate('/recruiter/add-profiles');
+                  }}
+                >
+                  See all
+                </a>
               </div>
-              <button onClick={() => window.location.href = '/recruiter/add-balance'} style={styles.addBalanceBtn}>Add Balance +</button>
+              <div>
+                {shortlistLoading && (
+                  <div style={styles.emptyState}>Loading shortlisted profiles...</div>
+                )}
+                {shortlistError && (
+                  <div style={styles.errorText}>{shortlistError}</div>
+                )}
+                {!shortlistLoading && shortlistedProfiles.length === 0 && !shortlistError && (
+                  <div style={styles.emptyState}>No profile shortlisted</div>
+                )}
+                {!shortlistLoading && shortlistedProfiles.map((p, i) => (
+                  <div key={p.id || i} style={styles.shortRow}>
+                    <div style={{ display: 'flex', gap: 16 }}>
+                      <span>{i + 1}. {p.name}</span>
+                      <span style={{ color: '#6B7280' }}>{p.title || p.role}</span>
+                    </div>
+                    <a
+                      href="#"
+                      style={styles.linkXS}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        navigate('/recruiter/add-profiles');
+                      }}
+                    >
+                      View profile
+                    </a>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{
+              ...styles.accountCard,
+              gridColumn: 'auto'
+            }}>
+              <div style={styles.cardTitle}>Account Information</div>
+              <div style={styles.accountRow}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 18 }}>💳</span>
+                  <span>Balance : ₹ {(walletBalance !== undefined ? walletBalance : (user?.walletBalance || 0)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                </div>
+                <button onClick={() => window.location.href = '/recruiter/add-balance'} style={styles.addBalanceBtn}>Add Balance +</button>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 12 : 16 }}>
+            <div style={styles.panelCard}>
+              <div style={styles.cardHeaderRow}>
+                <div style={styles.cardTitle}>Panel Members</div>
+                <button
+                  style={styles.addMoreBtn}
+                  onClick={() => navigate('/recruiter/add-panel-member')}
+                >
+                  Add More +
+                </button>
+              </div>
+              <div>
+                {panelMembers.map((m, i) => (
+                  <div key={i} style={styles.panelRow}>
+                    <span>{i + 1}. {m.name}</span>
+                    <span style={{ color: '#6B7280' }}>{m.role}</span>
+                    <a href="#" style={styles.linkXS}>Contact</a>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ ...styles.panelCard, background: '#fff' }}>
+              <div style={styles.cardHeaderRow}>
+                <div style={styles.cardTitle}>Talent Acquisition</div>
+                <button
+                  style={{ ...styles.addMoreBtn, background: '#A78BFA' }}
+                  onClick={() => {}}
+                >
+                  Add More +
+                </button>
+              </div>
+              <div>
+                {[
+                  { name: 'Riya V.', role: 'Hiring Manager' },
+                  { name: 'Aryan M.', role: 'Recruiter' },
+                  { name: 'Khushi G.', role: 'Hiring Manager' },
+                  { name: 'Rohit M.', role: 'Recruiter' }
+                ].map((m, i) => (
+                  <div key={i} style={styles.panelRow}>
+                    <span>{i + 1}. {m.name}</span>
+                    <span style={{ color: '#6B7280' }}>{m.role}</span>
+                    <a href="#" style={styles.linkXS}>Contact</a>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
