@@ -20,16 +20,39 @@ const rateLimiter = require('./middleware/rateLimiter');
 
 const app = express();
 
-// Rate limiting
-app.use('/api/', rateLimiter(15 * 60 * 1000, 100)); // 100 requests per 15 minutes
+// Rate limiting - don't apply to OPTIONS requests (CORS preflight)
+const limiter = rateLimiter(15 * 60 * 1000, 100); // 100 requests per 15 minutes
+app.use('/api/', (req, res, next) => {
+  if (req.method === 'OPTIONS') {
+    return next();
+  }
+  return limiter(req, res, next);
+});
 
 // Middleware
 // CORS configuration
 const corsOptions = {
-  origin: ['http://localhost:3000', 'http://localhost:3001'],
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    // List of allowed origins
+    const allowedOrigins = [
+      'http://localhost:3000', 
+      'http://localhost:3001',
+      'http://127.0.0.1:3000',
+      'http://127.0.0.1:3001'
+    ];
+    
+    if (allowedOrigins.indexOf(origin) !== -1 || origin.startsWith('http://localhost:')) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
   exposedHeaders: ['Content-Range', 'X-Content-Range'],
   maxAge: 600 // Cache preflight requests for 10 minutes
 };
