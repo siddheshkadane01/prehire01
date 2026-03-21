@@ -3,6 +3,7 @@ import { useAuth } from '../utils/AuthContext';
 import axios from 'axios';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FiBell, FiSearch, FiMenu, FiX, FiLogOut } from 'react-icons/fi';
+import { API_ENDPOINTS } from '../utils/apiClient';
 
 const CandidateEditProfile = () => {
   const { user, logout, updateUser } = useAuth();
@@ -54,7 +55,7 @@ const CandidateEditProfile = () => {
           return;
         }
         
-        const res = await axios.get('http://localhost:5001/api/candidate/profile', {
+        const res = await axios.get(API_ENDPOINTS.CANDIDATE.PROFILE, {
           headers: { Authorization: `Bearer ${token}` }
         });
         const p = res.data || {};
@@ -100,7 +101,7 @@ const CandidateEditProfile = () => {
           const token = localStorage.getItem('token');
           if (!token) return;
           
-          const res = await axios.get('http://localhost:5001/api/candidate/profile', {
+          const res = await axios.get(API_ENDPOINTS.CANDIDATE.PROFILE, {
             headers: { Authorization: `Bearer ${token}` }
           });
           const p = res.data || {};
@@ -181,11 +182,11 @@ const CandidateEditProfile = () => {
         experienceYears: Number(form.experienceYears || 0),
         summary: form.summary
       };
-      const res = await axios.put('http://localhost:5001/api/candidate/profile', payload, {
+      const res = await axios.put(API_ENDPOINTS.CANDIDATE.UPDATE_PROFILE, payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data?.walletBalance !== undefined) updateUser({ walletBalance: res.data.walletBalance });
-      navigate('/candidate/dashboard');
+      navigate('/candidate');
     } catch (err) {
       console.error('Failed to save profile', err);
       alert('Failed to save profile. See console.');
