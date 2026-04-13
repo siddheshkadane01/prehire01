@@ -15,8 +15,10 @@ const jobRoutes = require('./routes/jobs');
 const notificationRoutes = require('./routes/notifications');
 const adminRoutes = require('./routes/admin');
 const tenantRoutes = require('./routes/tenant');
+const testRoutes = require('./routes/test');
 const errorHandler = require('./middleware/errorHandler');
 const rateLimiter = require('./middleware/rateLimiter');
+const psychometricRoutes = require('./routes/psychometric');
 
 const app = express();
 
@@ -86,6 +88,8 @@ app.use('/api/jobs', jobRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/tenant', tenantRoutes);
+app.use('/api/test', testRoutes);
+app.use('/api/psychometric', psychometricRoutes);
 
 // Error handling middleware (must be last)
 app.use(errorHandler);
