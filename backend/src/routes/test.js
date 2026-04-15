@@ -28,7 +28,7 @@ router.get('/traits', auth, async (req, res) => {
 /**
  * GET /api/test/questions
  * Fetch all questions (optionally filter by traits via query param)
- * Query: ?traits=logical,verbal
+ * Query: ?traits=EXT,EST
  */
 router.get('/questions', auth, async (req, res) => {
   try {
@@ -47,7 +47,7 @@ router.get('/questions', auth, async (req, res) => {
 /**
  * POST /api/test/generate
  * Generate a balanced, randomized test
- * Body: { totalQuestions: 20, traits: ["logical", "verbal"] }
+ * Body: { totalQuestions: 20, traits: [] }
  */
 router.post('/generate', auth, async (req, res) => {
   try {
@@ -81,65 +81,14 @@ router.post('/generate', auth, async (req, res) => {
 });
 
 /**
- * POST /api/test/submit
- * Submit answers and calculate score
- * Body: { answers: [{ questionId: 1, selectedAnswer: "A" }] }
+ * POST /api/test/submit — Deprecated
+ * Use POST /api/psychometric/submit instead
  */
 router.post('/submit', auth, async (req, res) => {
-  try {
-    const { answers } = req.body;
-
-    if (!Array.isArray(answers) || !answers.length) {
-      return res.status(400).json({ success: false, message: 'answers array is required' });
-    }
-
-    // Fetch correct answers for submitted question IDs
-    const pool = require('../services/neonDb');
-    const ids = answers.map((a) => a.questionId);
-    const result = await pool.query(
-      `SELECT id, correct_answer, trait FROM questions WHERE id = ANY($1::int[])`,
-      [ids]
-    );
-
-    const correctMap = {};
-    result.rows.forEach((row) => {
-      correctMap[row.id] = { correctAnswer: row.correct_answer, trait: row.trait };
-    });
-
-    let totalScore = 0;
-    const traitScores = {};
-    const breakdown = answers.map((ans) => {
-      const question = correctMap[ans.questionId];
-      if (!question) return { questionId: ans.questionId, correct: false, trait: null };
-
-      const isCorrect = ans.selectedAnswer === question.correctAnswer;
-      if (isCorrect) totalScore++;
-
-      const trait = question.trait || 'general';
-      if (!traitScores[trait]) traitScores[trait] = { correct: 0, total: 0 };
-      traitScores[trait].total++;
-      if (isCorrect) traitScores[trait].correct++;
-
-      return {
-        questionId: ans.questionId,
-        correct: isCorrect,
-        correctAnswer: question.correctAnswer,
-        trait,
-      };
-    });
-
-    res.json({
-      success: true,
-      totalScore,
-      totalQuestions: answers.length,
-      percentage: Math.round((totalScore / answers.length) * 100),
-      traitScores,
-      breakdown,
-    });
-  } catch (error) {
-    console.error('Test submission error:', error);
-    res.status(500).json({ success: false, message: error.message });
-  }
+  return res.status(301).json({
+    success: false,
+    message: 'Use POST /api/psychometric/submit for Likert-based scoring.',
+  });
 });
 
 module.exports = router;

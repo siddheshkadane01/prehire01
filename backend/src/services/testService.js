@@ -4,12 +4,12 @@ const pool = require('./neonDb');
 
 /**
  * Fetch all questions from Neon DB
- * Table expected: questions(id, text, options jsonb, correct_answer, trait, difficulty)
+ * Table: "Question"(id, code, text, trait, direction)
  */
 const fetchAllQuestions = async () => {
   const result = await pool.query(
-    `SELECT id, text, options, correct_answer, trait, difficulty
-     FROM questions
+    `SELECT id, code, text, trait, direction
+     FROM "Question"
      ORDER BY id`
   );
   return result.rows;
@@ -22,8 +22,8 @@ const fetchQuestionsByTraits = async (traits = []) => {
   if (!traits.length) return fetchAllQuestions();
 
   const result = await pool.query(
-    `SELECT id, text, options, correct_answer, trait, difficulty
-     FROM questions
+    `SELECT id, code, text, trait, direction
+     FROM "Question"
      WHERE trait = ANY($1::text[])
      ORDER BY id`,
     [traits]
@@ -57,10 +57,8 @@ const shuffle = (arr) => {
 
 /**
  * Generate a balanced test:
- * - Picks equal (or as equal as possible) questions from each trait
- * - Randomizes final question order
- * @param {number} totalQuestions - Total number of questions in the test
- * @param {string[]} traits - Optional trait filter
+ * - Equal questions from each trait
+ * - Fully randomized order
  */
 const generateBalancedTest = async (totalQuestions = 20, traits = []) => {
   const questions = await fetchQuestionsByTraits(traits);
@@ -78,12 +76,10 @@ const generateBalancedTest = async (totalQuestions = 20, traits = []) => {
 
   traitKeys.forEach((trait, index) => {
     const pool = shuffle(grouped[trait]);
-    // Give extra question to first N traits if there's a remainder
     const count = index < remainder ? perTrait + 1 : perTrait;
     selected.push(...pool.slice(0, count));
   });
 
-  // Shuffle final list so traits aren't grouped together
   const finalTest = shuffle(selected);
 
   return {
@@ -98,7 +94,9 @@ const generateBalancedTest = async (totalQuestions = 20, traits = []) => {
  */
 const fetchAvailableTraits = async () => {
   const result = await pool.query(
-    `SELECT DISTINCT trait FROM questions WHERE trait IS NOT NULL ORDER BY trait`
+    `SELECT DISTINCT trait FROM "Question" 
+     WHERE trait IS NOT NULL 
+     ORDER BY trait`
   );
   return result.rows.map((r) => r.trait);
 };
