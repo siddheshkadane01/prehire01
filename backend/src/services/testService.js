@@ -8,9 +8,11 @@ const pool = require('./neonDb');
  */
 const fetchAllQuestions = async () => {
   const result = await pool.query(
-    `SELECT id, code, text, trait, direction
-     FROM "Question"
-     ORDER BY id`
+    `SELECT DISTINCT ON (v."questionCode")
+     v.id, v."questionCode" as code, q.trait, q.direction
+     FROM "Variation" v
+     JOIN "Question" q ON q.code = v."questionCode"
+     ORDER BY v."questionCode", RANDOM()`
   );
   return result.rows;
 };
@@ -22,10 +24,11 @@ const fetchQuestionsByTraits = async (traits = []) => {
   if (!traits.length) return fetchAllQuestions();
 
   const result = await pool.query(
-    `SELECT id, code, text, trait, direction
-     FROM "Question"
-     WHERE trait = ANY($1::text[])
-     ORDER BY id`,
+    `SELECT v.id, v."questionCode" as code, q.trait, q.direction
+     FROM "Variation" v
+     JOIN "Question" q ON q.code = v."questionCode"
+     WHERE q.trait = ANY($1::text[])
+     ORDER BY v.id`,
     [traits]
   );
   return result.rows;
